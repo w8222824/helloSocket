@@ -50,15 +50,21 @@ int main() {
 	EasyTcpClient client;
 	//client.InitSocket();
 	client.Connect("127.0.0.1", 4567);
+
+
 	//启动UI线程
 	std::thread t1(cmdThread, &client);            //声明一个线程专门用来执行传参的方法  参数2是参数1方法所要的传参
-	t1.detach();								//线程和主线程分离
+	t1.detach();									//线程和主线程分离
+
+
 	while (/*g_bRunt*/client.isRun())								//输入线程都不存在了 下面的sock接收处理逻辑也不该继续执行了
 	{
 		client.OnRun();
-
-
+	
 	}
+
+	client.Close();
+
 
 	//	// 7.关闭套节字closesocket
 	//#ifdef _WIN32
