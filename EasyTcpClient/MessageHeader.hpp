@@ -39,7 +39,7 @@ struct LoginResult :public DataHeader
 {
 	LoginResult() {
 		dataLength = sizeof(LoginResult);
-		cmd = CMD_LOGOUT_RESULT;
+		cmd = CMD_LOGIN_RESULT;
 		result = 0;
 	}
 	int result;
@@ -77,4 +77,4 @@ struct LogoutResult :public DataHeader
 	int result;
 };
 
-#endif  _MessageHeader_hpp_
+#endif  _MessageHeader_hpp_#pragma once

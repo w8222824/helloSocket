@@ -132,6 +132,7 @@ public:
 			if (ret < 0)	//小于0一定是连接失败了  
 			{
 				printf("<socket=%d>select任务结束1\n", _sock);
+				Close();
 				return false;
 			}
 
@@ -142,6 +143,7 @@ public:
 				if (-1 == RecvData(_sock))		//连接断开
 				{
 					printf("<socket=%d>select任务结束2\n", _sock);
+					Close();
 					return false;
 				}
 			}
