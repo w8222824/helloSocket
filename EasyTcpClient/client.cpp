@@ -47,33 +47,38 @@ void cmdThread(EasyTcpClient* client)
 
 
 int main() {
-	EasyTcpClient client;
+	EasyTcpClient client1;
 	//client.InitSocket();
-	client.Connect("127.0.0.1", 4567);
+	client1.Connect("192.168.81.1", 4567);		//windows下的ipv4  本地地址
 
+	EasyTcpClient client2;						
+	//client.InitSocket();
+	client2.Connect("192.168.236.133", 4567);	//192.168.236.133   ubuntu下的本地地址
+
+
+	EasyTcpClient client3;
+	//client.InitSocket();
+	client3.Connect("192.168.236.130", 4567);		////192.168.236.130   macos下的本地地址
 
 	//启动UI线程
-	std::thread t1(cmdThread, &client);            //声明一个线程专门用来执行传参的方法  参数2是参数1方法所要的传参
+	std::thread t1(cmdThread, &client1);            //声明一个线程专门用来执行传参的方法  参数2是参数1方法所要的传参
 	t1.detach();									//线程和主线程分离
+	std::thread t2(cmdThread, &client2);            //声明一个线程专门用来执行传参的方法  参数2是参数1方法所要的传参
+	t2.detach();									//线程和主线程分离
+	std::thread t3(cmdThread, &client2);            //声明一个线程专门用来执行传参的方法  参数2是参数1方法所要的传参
+	t3.detach();									//线程和主线程分离
 
-
-	while (/*g_bRunt*/client.isRun())								//输入线程都不存在了 下面的sock接收处理逻辑也不该继续执行了
+	while (/*g_bRunt*/client1.isRun()|| client2.isRun()|| client3.isRun())								//输入线程都不存在了 下面的sock接收处理逻辑也不该继续执行了
 	{
-		client.OnRun();
-	
+		client1.OnRun();
+		client2.OnRun();
+		client3.OnRun();
 	}
 
-	client.Close();
+	client1.Close();
+	client2.Close();
+	client3.Close();
 
-
-	//	// 7.关闭套节字closesocket
-	//#ifdef _WIN32
-	//	closesocket(_sock);
-	//	//清除Windows socket环境
-	//	WSACleanup();
-	//#else
-	//	close(_sock);
-	//#endif
 	printf("已退出，任务结束\n");
 	getchar();
 	return 0;

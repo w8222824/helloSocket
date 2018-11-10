@@ -62,13 +62,13 @@ public:
 		}
 		else
 		{
-			printf("正确，建立Socket成功。\n");
+			printf("正确，建立Socket=<%d>成功。\n",_sock);
 		}
 		return 0;
 	}
 
 	//连接服务器 参数1 ip  参数2  端口号
-	int Connect(char* ip,unsigned short port)
+	int Connect(const char* ip,unsigned short port)
 	{
 		if (INVALID_SOCKET == _sock)		//如果连接服务器的时候socket是无效的 我们初始化socket一下
 		{
@@ -86,10 +86,10 @@ public:
 		int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));    //连接对应的socket    参数3长度还是传类型比较好
 		if (SOCKET_ERROR == ret)				//建立套接字socket失败
 		{
-			printf("错误，连接服务器失败失败。\n");
+			printf("<socket=%d>错误，连接服务器<%s:%d>失败。\n",_sock,ip,port);
 		}
 		else {
-			printf("正确，连接服务器成功。\n");
+			printf("<socket=%d>正确，连接服务器<%s:%d>成功。\n", _sock, ip, port);
 		}
 		return ret;
 	}
@@ -127,7 +127,7 @@ public:
 			FD_ZERO(&fdReads);			//然后清理这个描述符集合
 			FD_SET(_sock, &fdReads);	//将参数1_sock添加到这个可读描述符集合里面
 
-			timeval t = { 1,0 };		//定义一个 时间变量类  这个表示1秒   表示socket多久处理一次
+			timeval t = { 0,0 };		//定义一个 时间变量类  这个表示1秒   表示socket多久处理一次
 			int ret = select(_sock + 1, &fdReads, 0, 0, &t);		//创建了一个socket连接 参数1最大socket最大值+1  参数2是可读的套接字结合  参数3是可写的套接字集合，不需要填0默认  参数4异常的套接字集合 不需要  填0  参数5 每次间隔时间  这里是1秒
 			if (ret < 0)	//小于0一定是连接失败了  
 			{
@@ -187,14 +187,14 @@ public:
 		{
 			LoginResult* login = (LoginResult*)header;        //Logout数据结构接收 我们接收到的数据
 			 //	printf("收到服务端<_Sock%d>请求：CMD_LOGIN_RESULT  数据长度:%d 返回的结果:%d\n", _sock, loginResult->dataLength, loginResult->result);
-			printf("收到服务端消息：CMD_LOGIN_RESULT,数据长度：%d\n", login->dataLength);
+			printf("<socket=%d>收到服务端消息：CMD_LOGIN_RESULT,数据长度：%d\n",_sock, login->dataLength);
 		}
 		break;
 		case CMD_LOGOUT_RESULT:
 		{
 			LogoutResult* logout = (LogoutResult*)header;     //Logout数据结构接收 我们接收到的数据
 			//	printf("收到服务端<_Sock%d>请求：CMD_LOGOUT_RESULT  数据长度:%d 返回的结果:%d\n", _sock, logoutResult->dataLength, logoutResult->result);
-			printf("收到服务端消息：CMD_LOGOUT_RESULT,数据长度：%d\n", logout->dataLength);
+			printf("<socket=%d>收到服务端消息：CMD_LOGOUT_RESULT,数据长度：%d\n", _sock, logout->dataLength);
 
 		}
 		break;
@@ -202,7 +202,7 @@ public:
 		{
 			NewUserJoin* userJoin = (NewUserJoin*)header;        //Logout数据结构接收 我们接收到的数据
 			 //	printf("收到服务端<_Sock%d>请求：CMD_NEW_USER_JOIN  数据长度:%d 新加入的客户端socket:%d\n", _sock, newUserJoin->dataLength, newUserJoin->socket);
-			printf("收到服务端消息：CMD_NEW_USER_JOIN,数据长度：%d\n", userJoin->dataLength);
+			printf("<socket=%d>收到服务端消息：CMD_NEW_USER_JOIN,数据长度：%d\n", _sock, userJoin->dataLength);
 
 		}
 		break;

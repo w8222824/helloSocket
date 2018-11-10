@@ -1,3 +1,9 @@
+#ifndef _MessageHeader_hpp_					//如果没有定义声成这段代码 
+
+#define  _MessageHeader_hpp_				//就生成  
+
+
+
 enum   CMD
 {
 	CMD_LOGIN,                //登录
@@ -71,3 +77,4 @@ struct LogoutResult :public DataHeader
 	int result;
 };
 
+#endif  _MessageHeader_hpp_
