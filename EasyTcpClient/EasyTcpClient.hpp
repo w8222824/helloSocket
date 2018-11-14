@@ -45,7 +45,7 @@ public:
 		//启动Windows socket 2.x环境
 		WORD ver = MAKEWORD(2, 2);
 		WSADATA dat;
-		WSAStartup(ver, &dat);
+		WSAStartup(ver, &dat);	//找的比较详细的    https://blog.csdn.net/clemontine/article/details/53141041 
 #endif
 		//--用Socket API建立简易TCP客户端
 		// 1.建立一个socket 套接字    怎么建立套接字socket函数  参数1表示ipv4类型的(ipv6是AF_INET6)  参数是什么数据类型的sock  这里是流类型的   参数三是我们要创建什么类型的socket 这里是tcp类型的  函数返回一个套接字
@@ -70,6 +70,7 @@ public:
 	//连接服务器 参数1 ip  参数2  端口号
 	int Connect(const char* ip,unsigned short port)
 	{
+		printf("正确，建立Socket=<%d>成功。\n", _sock);
 		if (INVALID_SOCKET == _sock)		//如果连接服务器的时候socket是无效的 我们初始化socket一下
 		{
 			InitSocket();
@@ -86,7 +87,7 @@ public:
 		int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));    //连接对应的socket    参数3长度还是传类型比较好
 		if (SOCKET_ERROR == ret)				//建立套接字socket失败
 		{
-			printf("<socket=%d>错误，连接服务器<%s:%d>失败。\n",_sock,ip,port);
+			printf("<socket=%d>错误，连接服务器<%s:%d>失败.\n",_sock,ip,port);
 		}
 		else {
 			printf("<socket=%d>正确，连接服务器<%s:%d>成功。\n", _sock, ip, port);
@@ -118,6 +119,7 @@ public:
 	//接收数据
 
 	//处理网络消息
+	int _nCount = 0;
 	bool  OnRun() {
 
 
@@ -129,6 +131,7 @@ public:
 
 			timeval t = { 0,0 };		//定义一个 时间变量类  这个表示1秒   表示socket多久处理一次
 			int ret = select(_sock + 1, &fdReads, 0, 0, &t);		//创建了一个socket连接 参数1最大socket最大值+1  参数2是可读的套接字结合  参数3是可写的套接字集合，不需要填0默认  参数4异常的套接字集合 不需要  填0  参数5 每次间隔时间  这里是1秒
+			printf("select ret=%d count=%d\n", ret, _nCount++);
 			if (ret < 0)	//小于0一定是连接失败了  
 			{
 				printf("<socket=%d>select任务结束1\n", _sock);
@@ -158,23 +161,24 @@ public:
 		return _sock != INVALID_SOCKET;
 	}
 
+	char szRecv[409600] = {};       //定义一个缓冲区 来接收数据  recv接收到的数据线放到这个缓冲区里面,这个缓冲区就类似我们一次从系统的缓冲区挖水的水瓢一样
 
 	//接收数据	处理粘包 拆包 				定义一个处理函数把处理服务端的逻辑都放进来
 	int RecvData(SOCKET _cSock) {
 
-		char szRecv[4096] = {};       //定义一个缓冲区 来接收数据  recv接收到的数据线放到这个缓冲区里面
-									   //5.接收服务端的数据
-		int nLen = (int)recv(_cSock, szRecv, sizeof(DataHeader), 0);    //接收服务端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
-		DataHeader* header = (DataHeader*)szRecv;        //把每次接收到的数据赋予给header
-		if (nLen <= 0)
-		{
-			printf("与服务器<_Sock%d>断开连接,任务结束。\n", _cSock);
-			return -1;
-		}
+		//5.接收服务端的数据
+		int nLen = (int)recv(_cSock, szRecv, /*sizeof(DataHeader)*/409600, 0);    //接收服务端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
+		printf("nLen=%d\n", nLen);
+		//DataHeader* header = (DataHeader*)szRecv;        //把每次接收到的数据赋予给header
+		//if (nLen <= 0)
+		//{
+		//	printf("与服务器<_Sock%d>断开连接,任务结束。\n", _cSock);
+		//	return -1;
+		//}
 
-		recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);    //接收包头是CMD_LOGIN_RESULT的数据
+		//recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);    //接收包头是CMD_LOGIN_RESULT的数据
 
-		OnNetMsg(header);
+		//OnNetMsg(header);
 		return 0;
 	}//int processor(SOCKET _Sock)
 

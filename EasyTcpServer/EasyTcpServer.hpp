@@ -210,6 +210,7 @@ public:
 	}// Close()
 
 	//处理网络消息
+	int _nCount = 0;
 	bool OnRun() {
 
 		if (isRun())
@@ -241,6 +242,7 @@ public:
 										//nfds  是一个整数值  是指fd_set集合中所有的描述符(socket)的范围,而不是数量
 										//参数1即是所有文件描述符最大值+1  在windows中这个参数无所谓 可以写0
 			int ret = select(maxSock + 1, &fdRead, &fdWrite, &fdExp,/* NULL*/&t);        //这个select一般来说最后一个数据填写NUll表示是阻塞模式 什么是阻塞模式咧就是当有客户端连接进来它才会有返回值  不然它就一直阻塞到这里 不给返回值  运行一下就知道  直接启动  客户端不连接 它会一直停在这里不往下走  如果不为null就是非堵塞模式了  填进去就表示多长时间去查询一下
+			printf("select ret=%d count=%d\n", ret, _nCount++);
 			if (ret<0)
 			{
 				printf("select任务结束\n");
@@ -284,22 +286,24 @@ public:
 	}
 
 	//接收数据  处理粘包 拆分包
+	char szRecv[409600] = {};        //定义一个缓冲区 来接收数据  recv接收到的数据线放到这个缓冲区里面
 
 	int RecvData(SOCKET _cSock) {
+					   //5.接收客户端的数据
+		int nLen = (int)recv(_cSock, szRecv, /*sizeof(DataHeader)*/409600, 0);    //接收客户端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
+		printf("nLen=%d\n", nLen);
+		LoginResult  loginRet;        //因为是变量了 所以不能这么赋予初值了
+		SendData(_cSock, &loginRet);
+																				  
+																				  //DataHeader* header = (DataHeader*)szRecv;        //把每次接收到的数据赋予给header
+		//if (nLen <= 0)
+		//{
+		//	printf("客户端<_clientSock%d>已经退出,任务结束。\n", _cSock);
+		//	return -1;
+		//}
+		//recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);    //参数2数据的容器大小 因为我们现在Login已经把DataHeader给继承了 数据都是一次性收发  所以缓存大小要两者相加（指针的偏移）   参数3参数 因为现在我们已经取到了消息头 要读取的位置也要减少DataHeader这个位置   2-14  06:44  好像这个是指针的内容
 
-
-		char szRecv[4096] = {};        //定义一个缓冲区 来接收数据  recv接收到的数据线放到这个缓冲区里面
-									   //5.接收客户端的数据
-		int nLen = (int)recv(_cSock, szRecv, sizeof(DataHeader), 0);    //接收客户端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
-		DataHeader* header = (DataHeader*)szRecv;        //把每次接收到的数据赋予给header
-		if (nLen <= 0)
-		{
-			printf("客户端<_clientSock%d>已经退出,任务结束。\n", _cSock);
-			return -1;
-		}
-		recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);    //参数2数据的容器大小 因为我们现在Login已经把DataHeader给继承了 数据都是一次性收发  所以缓存大小要两者相加（指针的偏移）   参数3参数 因为现在我们已经取到了消息头 要读取的位置也要减少DataHeader这个位置   2-14  06:44  好像这个是指针的内容
-
-		OnNetMsg(_cSock, header);	//发送数据
+		//OnNetMsg(_cSock, header);	//发送数据
 		return 0;
 	}//int processor(SOCKET _Sock)
 

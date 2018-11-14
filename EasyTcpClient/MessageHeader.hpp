@@ -43,6 +43,7 @@ struct LoginResult :public DataHeader
 		result = 0;
 	}
 	int result;
+	char data[1024];
 };
 //新客户端的数据结构
 struct NewUserJoin :public DataHeader
