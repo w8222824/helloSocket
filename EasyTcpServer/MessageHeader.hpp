@@ -18,6 +18,12 @@ enum   CMD
 //°üÍ·
 struct DataHeader
 {
+
+	DataHeader() 
+	{
+		dataLength = sizeof(DataHeader);
+		cmd = CMD_ERROR;
+	}
 	short dataLength;        //Êı¾İ³¤¶È
 	short cmd;                //ÃüÁî
 
@@ -32,6 +38,7 @@ struct Login :public DataHeader        //Ğ´³É¼Ì³Ğ  È»ºóÔÚ½á¹¹ÌåµÄ¹¹Ôìº¯ÊıÀïÃæĞ´Ë
 	}
 	char userName[32];
 	char PassWord[32];
+	char data[932];/*1024-2-2-32-32*/		//Ö÷ÒªÊÇ´Õ³É1024×Ö½Ú 1kb´óĞ¡login
 
 };
 //DataPackage  ½ÓÊÕ·şÎñÆ÷·µ»ØµÄÊı¾İµÄ°üÌå
@@ -43,8 +50,12 @@ struct LoginResult :public DataHeader
 		result = 0;
 	}
 	int result;
-	char data[1024];
+	char data[992]; /*1024-2-2-4*/		//Ö÷ÒªÊÇ´Õ³É1000×Ö½Ú ºÃËãµã= = Êµ¼ÊÓ¦¸ÃÒÔ1024±È½ÏºÃ   1kb´óĞ¡LoginResult
 };
+
+//int a = sizeof(Login);			//Êó±ê·Åµ½sizeofÉÏ ¿ÉÒÔ¿´µ½µ±Ç°Õâ¸öÀàĞÍµÄ´óĞ¡   Ò»¶¨Òª±»4Õû³ı  ÄÚ´æ×Ö½Ú¶ÔÆä
+
+
 //ĞÂ¿Í»§¶ËµÄÊı¾İ½á¹¹
 struct NewUserJoin :public DataHeader
 {

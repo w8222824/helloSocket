@@ -131,7 +131,7 @@ public:
 
 			timeval t = { 0,0 };		//定义一个 时间变量类  这个表示1秒   表示socket多久处理一次
 			int ret = select(_sock + 1, &fdReads, 0, 0, &t);		//创建了一个socket连接 参数1最大socket最大值+1  参数2是可读的套接字结合  参数3是可写的套接字集合，不需要填0默认  参数4异常的套接字集合 不需要  填0  参数5 每次间隔时间  这里是1秒
-			printf("select ret=%d count=%d\n", ret, _nCount++);
+			//printf("select ret=%d count=%d\n", ret, _nCount++);
 			if (ret < 0)	//小于0一定是连接失败了  
 			{
 				printf("<socket=%d>select任务结束1\n", _sock);
@@ -161,24 +161,51 @@ public:
 		return _sock != INVALID_SOCKET;
 	}
 
-	char szRecv[409600] = {};       //定义一个缓冲区 来接收数据  recv接收到的数据线放到这个缓冲区里面,这个缓冲区就类似我们一次从系统的缓冲区挖水的水瓢一样
-
+#ifndef RECV_BUFF_SIZE
+#define RECV_BUFF_SIZE 10240			// 使用宏定义一个字符串缓冲区最小单元大小  这里RECV_BUFF_SIZE表示整数10240  10Kb大小应该
+#endif
+	
+	char _szRecv[RECV_BUFF_SIZE] = {};				//定义一个接收缓冲区 来接收数据  recv接收到的数据线放到这个缓冲区里面,这个缓冲区就类似我们一次从系统的缓冲区挖水的水瓢一样
+	char _szMsgBuf[RECV_BUFF_SIZE * 10] = {};		//第二缓冲区  消息缓冲区
+	int _lastPos = 0;								//消息缓冲区数据尾部的位置
 	//接收数据	处理粘包 拆包 				定义一个处理函数把处理服务端的逻辑都放进来
 	int RecvData(SOCKET _cSock) {
 
+
 		//5.接收服务端的数据
-		int nLen = (int)recv(_cSock, szRecv, /*sizeof(DataHeader)*/409600, 0);    //接收服务端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
+		int nLen = (int)recv(_cSock, _szRecv, /*sizeof(DataHeader)*/409600, 0);    //接收服务端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
 		printf("nLen=%d\n", nLen);
-		//DataHeader* header = (DataHeader*)szRecv;        //把每次接收到的数据赋予给header
-		//if (nLen <= 0)
-		//{
-		//	printf("与服务器<_Sock%d>断开连接,任务结束。\n", _cSock);
-		//	return -1;
-		//}
+		
+		if (nLen <= 0)
+		{
+			printf("与服务器<_Sock%d>断开连接,任务结束。\n", _cSock);
+			return -1;
+		}
+		//将收取到的数据拷贝到消息缓冲区
+		memcpy(_szMsgBuf+ _lastPos, _szRecv, nLen);				//将每次接收数据放到我们定义的第二缓冲区_szMsgBuf里面（就是_szRecv这个源就是从recv的系统接收缓冲区取出数据的瓢子大小,nLen就是每次接收到的数据实际的大小  然后我们把每次接收到的实际数据nLen放到我们定义的第二缓冲区_szMsgBuf里面）     或者说_szRecv里面有从系统缓冲区瓦出来的数据  可能没满可能满了 我们取nLen 这个长度的数据 然后复制到_szMsgBuf 这个第二缓冲区里面
+		_lastPos += nLen;								//记录这一次消息的放了多长 下一次在这个后面再放  防止消息被覆盖了
+		while(_lastPos>=sizeof(DataHeader))				//如果消息缓冲区的数据已经大于一个消息头DataHeader长度,这时就可以知道当前消息体的长度  因为接受的数据里面已经至少有一个完整消息头的数据量了
+		{
 
-		//recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);    //接收包头是CMD_LOGIN_RESULT的数据
+			DataHeader* header = (DataHeader*)_szMsgBuf;	//把当前的消息数据强转成DataHeader类型
+			
+			if (_lastPos>=header->dataLength)			//当前消息缓冲区的数据长度大于了消息长度
+			{
+				int nSize = _lastPos - header->dataLength;//定义一个剩余未处理消息缓冲区的数据长度    处理前先存储一下这个值 因为处理后这个dataLength值已经发生了改变了 
 
-		//OnNetMsg(header);
+				OnNetMsg(header);						//使用我们封装的接口处理一下这个数据
+				//将剩余的未处理的数据前移
+				memcpy(_szMsgBuf, _szMsgBuf+ header->dataLength, _lastPos- header->dataLength);	//处理后我们需要把处理过的数据拿出来  没有处理的数据往前移,填充满这里面的数据  （参数1还是要接收数据的缓冲区_szMsgBuf  ,参数2表示数据源从_szMsgBuf的 header->dataLength的位置开始,这个之前取过了所以我们不需要了, 参数3_lastPos- header->dataLength，_lastPos是目前_szMsgBuf里面存储的数据的长度 我们上一步已经处理了一次了,所以我们我们实际缓存里面应该存储的长度是（总的）-（已经处理过的）= _lastPos- header->dataLength  的长度  这个长度）
+				_lastPos = nSize;						//写成_lastPos =_lastPos - header->dataLength   肯定不对的 因为上一步处理过了 
+				
+			}
+			else
+			{
+				//消息缓冲区的消息目前剩余的消息不够一条完整的消息  退出该次while循环
+				break;
+			}
+		}
+		
 		return 0;
 	}//int processor(SOCKET _Sock)
 
@@ -208,10 +235,21 @@ public:
 		{
 			NewUserJoin* userJoin = (NewUserJoin*)header;        //Logout数据结构接收 我们接收到的数据
 			 //	printf("收到服务端<_Sock%d>请求：CMD_NEW_USER_JOIN  数据长度:%d 新加入的客户端socket:%d\n", _sock, newUserJoin->dataLength, newUserJoin->socket);
-			printf("<socket=%d>收到服务端消息：CMD_NEW_USER_JOIN,数据长度：%d\n", _sock, userJoin->dataLength);
+			//	printf("<socket=%d>收到服务端消息：CMD_NEW_USER_JOIN,数据长度：%d\n", _sock, userJoin->dataLength);
 
 		}
 		break;
+		case CMD_ERROR:
+		{
+			///NewUserJoin* userJoin = (NewUserJoin*)header;        //Logout数据结构接收 我们接收到的数据
+			 //	printf("收到服务端<_Sock%d>请求：CMD_NEW_USER_JOIN  数据长度:%d 新加入的客户端socket:%d\n", _sock, newUserJoin->dataLength, newUserJoin->socket);
+			printf("<socket=%d>收到服务端消息：CMD_ERROR,数据长度：%d\n", _sock, header->dataLength);
+		}
+		break;
+		default:
+			printf("<socket=%d>收到未知数据,数据长度：%d\n", _sock, header->dataLength);
+
+			break;
 		}
 	}//OnNetMsg
 
