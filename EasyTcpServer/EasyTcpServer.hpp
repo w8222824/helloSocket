@@ -8,6 +8,7 @@
 
 
 #ifdef _WIN32
+	#define FD_SETSIZE   4024					//这个在winsock2.h里面是 如果没有定义  就定义成64  我们这边自己定义成1024  避开windows下 单线程最多64个socket的连接限制
 	#define WIN32_LEAN_AND_MEAN
 	#define _WINSOCK_DEPRECATED_NO_WARNINGS
 	#include <windows.h>
@@ -27,6 +28,7 @@
 #include<thread>    //c++线程库
 #include <vector>    //导入向量  用来存储
 #include "MessageHeader.hpp"
+#include "CELLTimestamp.hpp"
 #pragma comment(lib,"ws2_32.lib")        // 没有这句话 执行到WSAStartup(ver, &dat);会报无法解析 无法解析的外部符号 __imp__WSAStartup@8的错误   这句话的意思是我需要一个静态链接库  这个只能在windows下才有用 但是我们要跨平台 所以我们右键项目属性点击连接器 在点击输入 在附加依赖项里面添加ws2_32.lib
 
 
@@ -72,7 +74,8 @@ class EasyTcpServer
 private:
 	SOCKET _sock;
 	std::vector<ClientSocket*> _clients;        //定义一个全局向量变量来存储客户端的socket  类型为啥是*  是因为不写*好像是在栈上创建的  加了*  子类使用都是用new来生成的  这样就在堆上创建了
-
+	CELLTimestamp _tTime;						//时间类
+	int _recvCount;								//接收的服务端个数
 public:	
 	EasyTcpServer() {
 		_sock = INVALID_SOCKET;//声明一个无效的socket  
@@ -204,7 +207,7 @@ public:
 			NewUserJoin newUserJoin;									//声明用来存储接收新客户端加入通知数据的数据结构
 			//SendDataToAll(&newUserJoin);
 			_clients.push_back(new ClientSocket(cSock));							//把新加入的客户端存储到全局向量里面
-			printf("新客户端加入:socket=%d, IP=%s \n", (int)cSock, (inet_ntoa)(clientAddr.sin_addr));//(inet_ntoa)表示把IP地址转换成可读性的字符串了
+			//printf("socket=<%d>新客户端<%d>加入:, IP=%s \n", (int)cSock,_clients.size(),  (inet_ntoa)(clientAddr.sin_addr));//(inet_ntoa)表示把IP地址转换成可读性的字符串了
 		}
 
 
@@ -283,7 +286,7 @@ public:
 			if (ret<0)
 			{
 				printf("select任务结束\n");
-			
+				Close();
 				return false;
 			}
 
@@ -329,7 +332,7 @@ public:
 
 	int RecvData(ClientSocket* pClient) {
 		 //5.接收客户端的数据
-		int nLen = (int)recv(pClient->sockfd(), _szRecv, /*sizeof(DataHeader)*/409600, 0);    //接收客户端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
+		int nLen = (int)recv(pClient->sockfd(), _szRecv, /*sizeof(DataHeader)*/RECV_BUFF_SIZE, 0);    //接收客户端发送过来的数据  参数1对应客户端的socket  参数2 接收客户端发送数据的缓冲区  参数3 缓冲区大小  参数4  0默认
 		//	printf("nLen=%d\n", nLen);																																  //DataHeader* header = (DataHeader*)szRecv;        //把每次接收到的数据赋予给header
 		if (nLen <= 0)
 		{
@@ -366,6 +369,17 @@ public:
 
 	//响应网络消息
 	void OnNetMsg(SOCKET cSock,DataHeader* header) {
+
+		_recvCount++;
+		auto t1 = _tTime.getElapsedSecond();
+		if (t1 >= 1.0) {
+			
+			printf("time<%lf>,socket<%d>,clients<%d>,recvCount<%d>\n", t1, _sock,_clients.size(), _recvCount);
+			_recvCount = 0;
+			_tTime.update();
+		}
+
+
 		switch (header->cmd)
 		{
 		case CMD_LOGIN:
@@ -428,4 +442,4 @@ public:
 
 };
 
-#endif  _EasyTcpServer_hpp_
+#endif // _EasyTcpServer_hpp_

@@ -62,7 +62,7 @@ public:
 		}
 		else
 		{
-			printf("正确，建立Socket=<%d>成功。\n",_sock);
+			//printf("正确，建立Socket=<%d>成功。\n",_sock);
 		}
 		return 0;
 	}
@@ -70,7 +70,7 @@ public:
 	//连接服务器 参数1 ip  参数2  端口号
 	int Connect(const char* ip,unsigned short port)
 	{
-		printf("正确，建立Socket=<%d>成功。\n", _sock);
+	//	printf("正确，建立Socket=<%d>成功。\n", _sock);
 		if (INVALID_SOCKET == _sock)		//如果连接服务器的时候socket是无效的 我们初始化socket一下
 		{
 			InitSocket();
@@ -90,7 +90,7 @@ public:
 			printf("<socket=%d>错误，连接服务器<%s:%d>失败.\n",_sock,ip,port);
 		}
 		else {
-			printf("<socket=%d>正确，连接服务器<%s:%d>成功。\n", _sock, ip, port);
+			//printf("<socket=%d>正确，连接服务器<%s:%d>成功。\n", _sock, ip, port);
 		}
 		return ret;
 	}
