@@ -1,0 +1,54 @@
+﻿  main.cpp
+c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\type_traits(16707566): warning C4244: “参数”: 从“_Ty”转换到“int”，可能丢失数据
+          with
+          [
+              _Ty=unsigned __int64
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\type_traits(16707566): note: 参见对正在编译的函数 模板 实例化“void std::_Invoker_functor::_Call<void(__cdecl *)(int),_Ty>(_Callable &&,_Ty &&) noexcept(false)”的引用
+          with
+          [
+              _Ty=unsigned __int64,
+              _Callable=void (__cdecl *)(int)
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\thr\xthread(237): note: 参见对正在编译的函数 模板 实例化“void std::invoke<void(__cdecl *)(int),unsigned __int64>(_Callable &&,unsigned __int64 &&) noexcept(false)”的引用
+          with
+          [
+              _Callable=void (__cdecl *)(int)
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\thr\xthread(246): note: 参见对正在编译的函数 模板 实例化“void std::_LaunchPad<_Target>::_Execute<0,1>(std::tuple<void (__cdecl *)(int),unsigned __int64> &,std::integer_sequence<unsigned __int64,0,1>)”的引用
+          with
+          [
+              _Target=std::unique_ptr<std::tuple<void (__cdecl *)(int),unsigned __int64>,std::default_delete<std::tuple<void (__cdecl *)(int),unsigned __int64>>>
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\thr\xthread(245): note: 参见对正在编译的函数 模板 实例化“void std::_LaunchPad<_Target>::_Execute<0,1>(std::tuple<void (__cdecl *)(int),unsigned __int64> &,std::integer_sequence<unsigned __int64,0,1>)”的引用
+          with
+          [
+              _Target=std::unique_ptr<std::tuple<void (__cdecl *)(int),unsigned __int64>,std::default_delete<std::tuple<void (__cdecl *)(int),unsigned __int64>>>
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\thr\xthread(242): note: 编译 类 模板 成员函数 "void std::_LaunchPad<_Target>::_Run(std::_LaunchPad<_Target> *) noexcept" 时
+          with
+          [
+              _Target=std::unique_ptr<std::tuple<void (__cdecl *)(int),unsigned __int64>,std::default_delete<std::tuple<void (__cdecl *)(int),unsigned __int64>>>
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\thr\xthread(230): note: 参见对正在编译的函数 模板 实例化“void std::_LaunchPad<_Target>::_Run(std::_LaunchPad<_Target> *) noexcept”的引用
+          with
+          [
+              _Target=std::unique_ptr<std::tuple<void (__cdecl *)(int),unsigned __int64>,std::default_delete<std::tuple<void (__cdecl *)(int),unsigned __int64>>>
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\thr\xthread(257): note: 参见对正在编译的 类 模板 实例化 "std::_LaunchPad<_Target>" 的引用
+          with
+          [
+              _Target=std::unique_ptr<std::tuple<void (__cdecl *)(int),unsigned __int64>,std::default_delete<std::tuple<void (__cdecl *)(int),unsigned __int64>>>
+          ]
+  c:\program files (x86)\microsoft visual studio\2017\professional\vc\tools\msvc\14.16.27023\include\thread(46): note: 参见对正在编译的函数 模板 实例化“void std::_Launch<std::unique_ptr<std::tuple<void (__cdecl *)(int),unsigned __int64>,std::default_delete<_Ty>>>(_Thrd_t *,_Target &&)”的引用
+          with
+          [
+              _Ty=std::tuple<void (__cdecl *)(int),unsigned __int64>,
+              _Target=std::unique_ptr<std::tuple<void (__cdecl *)(int),unsigned __int64>,std::default_delete<std::tuple<void (__cdecl *)(int),unsigned __int64>>>
+          ]
+  f:\testsvn\trunk\hellosocket\hellosocket\hellothread\main.cpp(35): note: 参见对正在编译的函数 模板 实例化“std::thread::thread<void(__cdecl &)(int),size_t&,void>(_Fn,size_t &)”的引用
+          with
+          [
+              _Fn=void (__cdecl &)(int)
+          ]
+  HelloThread.vcxproj -> F:\testSVN\trunk\HelloSocket\HelloSocket\x64\Debug\HelloThread.exe
