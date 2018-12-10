@@ -47,7 +47,7 @@ void cmdThread(/*EasyTcpClient* client*/)
 
 
 //客户端连接的最大数量
-const int  cCount = 500;		//已经在EasyTcpServer里面将WINSOCKE2.H里面的FD_SETSIZE从64自定义成了1024
+const int  cCount = 4000;		//已经在EasyTcpServer里面将WINSOCKE2.H里面的FD_SETSIZE从64自定义成了1024
 								//	const int  cCount = 1;		//FD_SETSIZE最大连接数 64   -1 表示服务器的那个
 //发送线程数量
 const int  tCount = 4;
@@ -71,7 +71,7 @@ void sendThread(int id)
 	for (size_t i = begin; i < end; i++)
 	{
 
-		client[i]->Connect("120.229.100.38", 4567);			//全部创建完了后再开始连接
+		client[i]->Connect("127.0.0.1", 4567);			//全部创建完了后再开始连接
 		printf("Connect=%d\n", i);
 
 

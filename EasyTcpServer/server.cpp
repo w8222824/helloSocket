@@ -42,7 +42,7 @@ int main() {
 
 	server.Listen(50);			//监听 表示最多监听5个客户端
 	
-
+	server.Start();
 								//启动UI线程
 	std::thread t1(cmdThread);            //声明一个线程专门用来执行传参的方法  参数2是参数1方法所要的传参
 	t1.detach();									//线程和主线程分离
