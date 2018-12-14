@@ -47,7 +47,7 @@ void cmdThread(/*EasyTcpClient* client*/)
 
 
 //客户端连接的最大数量
-const int  cCount = 4000;		//已经在EasyTcpServer里面将WINSOCKE2.H里面的FD_SETSIZE从64自定义成了1024
+const int  cCount = 10000;		//已经在EasyTcpServer里面将WINSOCKE2.H里面的FD_SETSIZE从64自定义成了1024
 								//	const int  cCount = 1;		//FD_SETSIZE最大连接数 64   -1 表示服务器的那个
 //发送线程数量
 const int  tCount = 4;
@@ -72,10 +72,15 @@ void sendThread(int id)
 	{
 
 		client[i]->Connect("127.0.0.1", 4567);			//全部创建完了后再开始连接
-		printf("Connect=%d\n", i);
+		printf("thread<%d> Connect=%d\n",id, i);
 
 
 	}
+
+	std::chrono::milliseconds t(5000);// 声明  c++标准库里面的  时间变量 t为 3000毫秒   
+	std::this_thread::sleep_for(t);// 开启一个线程 休眠t秒   跨平台的 这个
+
+
 
 	//client.InitSocket();
 	//client1.Connect("172.16.47.190", 4567);				// 阿里云  私网ip
@@ -85,14 +90,18 @@ void sendThread(int id)
 	//	client1.Connect("192.168.236.130", 4567);		//mac下的ipv4  本地地址
 	//client1.Connect("192.168.236.133", 4567);		//ubuntu下的ipv4 本地地址
 
-	Login login;
-	strcpy(login.userName, "lyd");
-	strcpy(login.PassWord, "lydmm");
+	Login login[10];
+	for (size_t i = 0; i < 10; i++)
+	{
+		strcpy(login[i].userName, "lyd");
+		strcpy(login[i].PassWord, "lydmm");
+	}
+	const int nLen = sizeof(login);
 	while (/*client1.isRun()&& */g_bRunt)								//输入线程都不存在了 下面的sock接收处理逻辑也不该继续执行了
 	{
 		for (int i = 0; i < cCount; i++)
 		{
-			client[i]->SendData(&login);			//循环发送数据
+			client[i]->SendData(&login[i], nLen);			//循环发送数据
 		//	client[i]->OnRun();					//处理
 		}
 	}

@@ -8,7 +8,7 @@
 
 
 #ifdef _WIN32
-	#define FD_SETSIZE   4024					//这个在winsock2.h里面是 如果没有定义  就定义成64  我们这边自己定义成1024  避开windows下 单线程最多64个socket的连接限制
+	#define FD_SETSIZE   2506					//这个在winsock2.h里面是 如果没有定义  就定义成64  我们这边自己定义成1024  避开windows下 单线程最多64个socket的连接限制
 	#define WIN32_LEAN_AND_MEAN
 	#define _WINSOCK_DEPRECATED_NO_WARNINGS
 	#include <windows.h>
@@ -78,7 +78,7 @@ private:
 class INetEvent
 {
 public:
-	//纯虚函数
+	//纯虚函数 就是继承了INetEvent  这个类的 都需要自己实现
 	//客户端离开事件
 	virtual void OnLeave(ClientSocket* pClient) = 0;
 	virtual void OnNetMsg(SOCKET cSock, DataHeader* header) = 0;
@@ -104,7 +104,9 @@ public:
 	}
 
 
-	void setEventObj(INetEvent* event)
+
+	//设置事件Obj
+	void setEventObj(INetEvent* event)		
 	{
 		_pNetEvent = event;
 	}
@@ -201,7 +203,7 @@ public:
 			{
 				if (FD_ISSET(_clients[n]->sockfd(), &fdRead))
 				{
-					if (-1 == RecvData(_clients[n]))
+					if (-1 == RecvData(_clients[n]))		//当==-1时候客户端肯定退出了
 					{
 						auto iter = _clients.begin() + n;//std::vector<SOCKET>::iterator
 						if (iter != _clients.end())
@@ -261,7 +263,7 @@ public:
 	virtual void OnNetMsg(SOCKET cSock, DataHeader* header) {
 
 		_recvCount++;
-		_pNetEvent->OnNetMsg(cSock, header);
+		//_pNetEvent->OnNetMsg(cSock, header);  计算时间的  更准 但是有耗时或者说消耗
 
 
 		switch (header->cmd)
@@ -327,10 +329,11 @@ private:
 	std::vector<ClientSocket*> _clientsBuff;	//缓存客户端队列 
 	std::mutex _mutex;							//锁
 	std::thread* _pThread;						//用来存  专门执行OnRun的线程对象
-	INetEvent* _pNetEvent;						
+	INetEvent* _pNetEvent;						//声明一个网络事件类接口变量
 public:
-		std::atomic_int _recvCount;				//声明一个原子整数
-};//class CellServer
+		//std::atomic_int _recvCount;				//声明一个原子整数
+	std::atomic_long  _recvCount;			////声明一个原子长整数
+};//class CellServer	
 
 
 
@@ -592,7 +595,7 @@ public:
 
 		return _sock != INVALID_SOCKET;
 	}
-	//响应网络消息
+	//响应网络消息 
 	void time4msg() {
 
 		//_recvCount++;
@@ -605,7 +608,7 @@ public:
 				recvCount += ser->_recvCount;
 				ser->_recvCount = 0;
 			}
-			printf("time<%lf>,socket<%d>,clients<%d>,recvCount<%d>\n", t1, _sock, _clients.size(), _recvCount);
+			printf("thread<%d>,time<%lf>,socket<%d>,clients<%d>,recvCountqwer<%d>\n",_cellServers.size(), t1, _sock, (int)_clients.size(), (int)(recvCount/t1));
 			_tTime.update();
 		}
 	}
@@ -621,7 +624,7 @@ public:
 		return SOCKET_ERROR;
 	}
 
-
+	//发送数据给所有客户端
 	void SendDataToAll(DataHeader* header)
 	{
 		for (int n = (int)_clients.size() - 1; n >= 0; n--)
@@ -630,16 +633,16 @@ public:
 		}
 	}
 
-
+	//虚函数OnLeave在EasyTcpServer类里面的实现
 	virtual void OnLeave(ClientSocket* pClient)
 	{
 		for (int n = (int)_clients.size() - 1; n >= 0; n--)
 		{
-			if (_clients[n] == pClient)
+			if (_clients[n] == pClient)			//如果客户端数组里面有某个元素==这个客户端		
 			{
-				auto iter = _clients.begin() + n;
-				if (iter != _clients.end())
-					_clients.erase(iter);
+				auto iter = _clients.begin() + n;	//得到这个客户端在向量数组里面的位置索引值
+				if (iter != _clients.end())			//如果这个索引值不是最后这个向量数组的最后一位  
+					_clients.erase(iter);		//从向量数组里面清理出来
 			}
 		}
 	}
