@@ -23,11 +23,13 @@ class EasyTcpClient
 {
 
 	SOCKET _sock;					//声明一个socket  套节字
+	bool _isConnects;				//是否连接
 public:
 	//构造函数
 	EasyTcpClient()
 	{
 		_sock = INVALID_SOCKET;//声明一个无效的socket  
+		_isConnects = false;
 	}
 
 
@@ -90,6 +92,8 @@ public:
 			printf("<socket=%d>错误，连接服务器<%s:%d>失败.\n",_sock,ip,port);
 		}
 		else {
+			
+			_isConnects = true;				//连接成功把_isConnects状态量改为true
 			//printf("<socket=%d>正确，连接服务器<%s:%d>成功。\n", _sock, ip, port);
 		}
 		return ret;
@@ -111,7 +115,7 @@ public:
 #endif
 			_sock = INVALID_SOCKET;//关闭清理完毕后 赋予无效值
 		}
-
+		_isConnects = false;			//socket是无效的   赋值
 	}
 
 
@@ -158,7 +162,7 @@ public:
 	 //是否在运行中   true表示运行 否者没有运行
 	bool  isRun() {
 
-		return _sock != INVALID_SOCKET;
+		return _sock != INVALID_SOCKET&&_isConnects;
 	}
 
 #ifndef RECV_BUFF_SIZE
@@ -166,7 +170,7 @@ public:
 #endif
 	
 	char _szRecv[RECV_BUFF_SIZE] = {};				//定义一个接收缓冲区 来接收数据  recv接收到的数据线放到这个缓冲区里面,这个缓冲区就类似我们一次从系统的缓冲区挖水的水瓢一样
-	char _szMsgBuf[RECV_BUFF_SIZE * 10] = {};		//第二缓冲区  消息缓冲区
+	char _szMsgBuf[RECV_BUFF_SIZE * 5] = {};		//第二缓冲区  消息缓冲区
 	int _lastPos = 0;								//消息缓冲区数据尾部的位置
 	//接收数据	处理粘包 拆包 				定义一个处理函数把处理服务端的逻辑都放进来
 	int RecvData(SOCKET _cSock) {
@@ -256,11 +260,18 @@ public:
 	 //发送数据
 	int SendData(DataHeader* header,int nLen) {
 
+		int ret = SOCKET_ERROR;
+
 		if (isRun() && header)	//socket是否在运行  header不为空
 		{
-			return send(_sock, (const char*)header, nLen, 0);
+			ret= send(_sock, (const char*)header, nLen, 0);
+			if (SOCKET_ERROR==ret)
+			{
+				Close();
+				
+			}
 		}
-		return SOCKET_ERROR;
+		return ret;
 	}
 
 

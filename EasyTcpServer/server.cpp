@@ -37,12 +37,14 @@ void cmdThread()
 int main() {
 
 	EasyTcpServer server;		//声明
+
+	
 	server.InitSocket();		//初始化socket 就是创建socket
 	server.Bind(nullptr,4567);	//绑定任意ip的 4567端口号
 
 	server.Listen(50);			//监听 表示最多监听5个客户端
 	
-	server.Start();
+	server.Start(4);
 								//启动UI线程
 	std::thread t1(cmdThread);            //声明一个线程专门用来执行传参的方法  参数2是参数1方法所要的传参
 	t1.detach();									//线程和主线程分离

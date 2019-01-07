@@ -19,7 +19,7 @@ void cmdThread(/*EasyTcpClient* client*/)
 		scanf("%s", cmdBuf);        //控制台输入字符串
 		if (0 == strcmp(cmdBuf, "exit"))    //如果输入的字符串为exit
 		{
-			//client->Close();
+
 			 g_bRunt = false;
 			printf("退出cmdThread线程\n");
 			break;
@@ -58,6 +58,7 @@ EasyTcpClient* client[cCount];
 //定义发送线程
 void sendThread(int id)
 {
+	printf("thread<%d> ,join\n", id);
 	//目前发送线程 就4个 ID就是 1~4
 	int c = cCount / tCount;	//每个发送线程要连接的客户端总数
 	int begin = (id-1)*c;		//这个算出每个线程连接的客户端书从哪里开始
@@ -72,10 +73,10 @@ void sendThread(int id)
 	{
 
 		client[i]->Connect("127.0.0.1", 4567);			//全部创建完了后再开始连接
-		printf("thread<%d> Connect=%d\n",id, i);
-
+	
 
 	}
+	printf("thread<%d> Connect=<begin=%d,end=%d>\n", id, begin, end);
 
 	std::chrono::milliseconds t(5000);// 声明  c++标准库里面的  时间变量 t为 3000毫秒   
 	std::this_thread::sleep_for(t);// 开启一个线程 休眠t秒   跨平台的 这个
@@ -109,7 +110,10 @@ void sendThread(int id)
 	for (int i = 0; i < cCount; i++)
 	{
 		client[i]->Close();
+		delete client[i];			//因为是New的 所以要delete下
+		client[i] = NULL;
 	}
+	printf("thread<%d> ,exit\n", id);
 }
 
 
